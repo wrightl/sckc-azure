@@ -1,5 +1,4 @@
 ﻿using admin.app.Models;
-using admin.app.Extensions;
 using Azure;
 using Azure.Data.Tables;
 using Microsoft.AspNetCore.Mvc;
@@ -7,11 +6,12 @@ using Stripe;
 using Stripe.Checkout;
 using System;
 using System.Collections.Generic;
-using io = System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Hosting;
 using System.IO;
+using admin.app.Settings;
+using Microsoft.Extensions.Options;
 
 namespace admin.app.controllers
 {
@@ -19,17 +19,19 @@ namespace admin.app.controllers
     [ApiController]
     public class PaymentsController : ControllerBase
     {
-        private IWebHostEnvironment _webhost;
+        private readonly IWebHostEnvironment _webhost;
+        private readonly Secrets _secrets;
 
-        public PaymentsController(IWebHostEnvironment webhost)
+        public PaymentsController(IWebHostEnvironment webhost, IOptions<Secrets> options)
         {
             _webhost = webhost ?? throw new ArgumentNullException(nameof(webhost));
+            _secrets = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
         [HttpPost]
         public async Task<IActionResult> LiveWebhook()
         {
-            var secret = io.File.ReadAllText(_webhost.MapPath("data/stripe_webhook_live_secret.data")).Trim();
+            var secret = this._secrets.stripe_webhook_live_secret.Trim();
             return await this.processWebhook(true, secret);
         }
 
@@ -37,7 +39,7 @@ namespace admin.app.controllers
         [HttpPost]
         public async Task<IActionResult> TestWebhook()
         {
-            var secret = System.IO.File.ReadAllText(_webhost.MapPath("data/stripe_webhook_test_secret.data")).Trim();
+            var secret = this._secrets.stripe_webhook_test_secret.Trim();
 
             return await this.processWebhook(false, secret);
         }
@@ -89,7 +91,7 @@ namespace admin.app.controllers
 
                 return Ok();
             }
-            catch (StripeException e)
+            catch
             {
                 return BadRequest();
             }
@@ -181,7 +183,7 @@ namespace admin.app.controllers
 
         private async Task<TableClient> getTableClient(string tableName)
         {
-            var connectionString = System.IO.File.ReadAllText(_webhost.MapPath("data/azure_storage_connstring.data")).Trim();
+            var connectionString = this._secrets.azure_storage_connstring.Trim();
             var client = new TableClient(connectionString, tableName);
 
             await client.CreateIfNotExistsAsync();
