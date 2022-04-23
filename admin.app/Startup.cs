@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.OpenApi.Models;
 
 namespace admin.app
 {
@@ -20,7 +21,13 @@ namespace admin.app
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddRazorPages();
-        
+
+            services.AddControllers();
+            services.AddSwaggerGen(c =>
+            {
+                c.SwaggerDoc("v1", new OpenApiInfo { Title = "SCKC", Version = "v1" });
+            });
+
             services.Configure<Secrets>(Configuration.GetSection("Secrets"));
         }
 
@@ -30,6 +37,8 @@ namespace admin.app
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                app.UseSwagger();
+                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SCKC v1"));
             }
             else
             {
@@ -48,6 +57,7 @@ namespace admin.app
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapRazorPages();
+                endpoints.MapControllers();
             });
         }
     }

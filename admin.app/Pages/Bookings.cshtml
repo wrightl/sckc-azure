@@ -56,7 +56,7 @@
                         @Html.DisplayFor(modelItem => item.BookingType)
                     </td>
                     <td>
-                        @(item.Amount!=null && item.Amount.HasValue ? item.Amount.Value.ToString("C") : String.Empty)
+                        £@(item.Amount!=null && item.Amount.HasValue ? item.Amount.Value.ToString("N2") : String.Empty)
                     </td>
                     <td>
                         @Html.DisplayFor(modelItem => item.People)
@@ -71,7 +71,7 @@
                     <td></td>
                     <td></td>
                     <td></td>
-                    <td>@Model.Bookings.Sum(booking => booking.Amount).Value.ToString("C")</td>
+                    <td>£@Model.Bookings.Sum(booking => booking.Amount).Value.ToString("N2")</td>
                     <td>@Model.Bookings.Sum(booking => booking.People)</td>
                 </tr>
             </tfoot>

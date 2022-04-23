@@ -28,14 +28,14 @@ namespace admin.app.controllers
             _secrets = options?.Value ?? throw new ArgumentNullException(nameof(options));
         }
 
-        [HttpPost]
+        [HttpPost("livewebhook")]
         public async Task<IActionResult> LiveWebhook()
         {
             var secret = this._secrets.stripe_webhook_live_secret.Trim();
             return await this.processWebhook(true, secret);
         }
 
-        [HttpPost]
+        [HttpPost("testwebhook")]
         public async Task<IActionResult> TestWebhook()
         {
             var secret = this._secrets.stripe_webhook_test_secret.Trim();
@@ -43,7 +43,7 @@ namespace admin.app.controllers
             return await this.processWebhook(false, secret);
         }
 
-        [HttpPost]
+        [HttpPost("booking")]
         public async Task<IActionResult> Booking(BookingDto info)
         {
             var entity = new TableEntity(getPartitionKey(info.Event, info.Date), info.Email)
