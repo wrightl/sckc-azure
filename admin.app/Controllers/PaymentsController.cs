@@ -35,7 +35,6 @@ namespace admin.app.controllers
             return await this.processWebhook(true, secret);
         }
 
-        [Route("api/testwebhook")]
         [HttpPost]
         public async Task<IActionResult> TestWebhook()
         {
@@ -44,7 +43,6 @@ namespace admin.app.controllers
             return await this.processWebhook(false, secret);
         }
 
-        [Route("api/booking")]
         [HttpPost]
         public async Task<IActionResult> Booking(BookingDto info)
         {
