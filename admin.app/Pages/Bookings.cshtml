@@ -1,0 +1,84 @@
+﻿@page
+@model admin.app.Pages.BookingsModel
+@{
+    ViewData["Title"] = "Bookings";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Bookings for @Model.EventDate</h1>
+    
+    <div class="row">
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Booking Type</th>
+                    <th>Amount</th>
+                    <th>People</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Bookings.Where(bk => bk.IsLiveBooking))
+                {
+                <tr>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Email)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.BookingType)
+                    </td>
+                    <td>
+                        @(item.Amount!=null && item.Amount.HasValue ? item.Amount.Value.ToString("C") : String.Empty)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.People)
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+                }
+                @foreach (var item in Model.Bookings.Where(bk => !bk.IsLiveBooking))
+                {
+                <tr style="background-color: red;">
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.Email)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.BookingType)
+                    </td>
+                    <td>
+                        @(item.Amount!=null && item.Amount.HasValue ? item.Amount.Value.ToString("C") : String.Empty)
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.People)
+                    </td>
+                    <td>
+                    </td>
+                </tr>
+                }
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <td>@Model.Bookings.Sum(booking => booking.Amount).Value.ToString("C")</td>
+                    <td>@Model.Bookings.Sum(booking => booking.People)</td>
+                </tr>
+            </tfoot>
+        </table>
+
+    </div>
+
+    </div>
+
+</div>

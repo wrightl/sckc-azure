@@ -1,0 +1,38 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Bookings Summary";
+}
+
+<div class="text-center">
+    <h1 class="display-4">Events</h1>
+    
+    <div class="row">
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Event</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Events)
+                {
+                    <tr>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Summary)
+                        </td>
+                        <td> 
+                            <a asp-page="/Bookings" 
+                               asp-route-id="@item.Summary.Replace(" ", string.Empty)_@item.StartDateTime.ToString("ddMMyy")"
+                               asp-route-eventdate="@item.StartDateTime.ToString("dd/MM/yyyy")">@item.StartDateTime.ToString("dd/MM/yyyy")</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </div>
+
+</div>
