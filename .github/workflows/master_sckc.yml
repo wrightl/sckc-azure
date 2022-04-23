@@ -31,10 +31,10 @@ jobs:
       - name: Insert secrets into appsettings
         run: |
             cd ${{env.DOTNET_ROOT}}/myapp
-            ((Get-Content -path appsettings.json -Raw) -replace '{{azure_storage_connstring}}','${{ secrets.AZURE_STORAGE_CONNSTRING }}') | Set-Content -Path appsettings.json
-            ((Get-Content -path appsettings.json -Raw) -replace '{{stripe_webhook_test_secret}}','${{ secrets.STRIPE_WEBHOOK_TEST_SECRET }}') | Set-Content -Path appsettings.json
-            ((Get-Content -path appsettings.json -Raw) -replace '{{stripe_webhook_live_secret}}','${{ secrets.STRIPE_WEBHOOK_LIVE_SECRET }}') | Set-Content -Path appsettings.json
-            ((Get-Content -path appsettings.json -Raw) -replace '{{sendgrid_apikey}}','${{ secrets.SENDGRID_APIKEY }}') | Set-Content -Path appsettings.json
+            ((Get-Content -path appsettings.json -Raw) -replace '{azure_storage_connstring}','${{ secrets.AZURE_STORAGE_CONNSTRING }}') | Set-Content -Path appsettings.json
+            ((Get-Content -path appsettings.json -Raw) -replace '{stripe_webhook_test_secret}','${{ secrets.STRIPE_WEBHOOK_TEST_SECRET }}') | Set-Content -Path appsettings.json
+            ((Get-Content -path appsettings.json -Raw) -replace '{stripe_webhook_live_secret}','${{ secrets.STRIPE_WEBHOOK_LIVE_SECRET }}') | Set-Content -Path appsettings.json
+            ((Get-Content -path appsettings.json -Raw) -replace '{sendgrid_apikey}','${{ secrets.SENDGRID_APIKEY }}') | Set-Content -Path appsettings.json
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
