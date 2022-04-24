@@ -46,15 +46,9 @@ namespace admin.app.controllers
         [HttpPost("booking")]
         public async Task<IActionResult> Booking(BookingDto info)
         {
-            var entity = new TableEntity(getPartitionKey(info.Event, info.Date), info.Email)
-            {
-                {"Name", info.Name },
-                {"BookingType", "Request" },
-                {"TelNo", info.TelNo },
-                {"Type", (info.isLiveBooking ? "Live" : "Test") },
-                {"People", info.Items.Sum(item => item.Quantity) },
-                {"Date", info.Date }
-            };
+            DateTime.TryParse(info.Date, out var date);
+
+            var entity = createTableEntity(info.Event, info.Date, null, info.Name, "Request", info.TelNo, info.isLiveBooking, null, info.Items.Sum(item => item.Quantity), date);
 
             if (await addToStorage(entity))
                 return Ok();
@@ -89,30 +83,25 @@ namespace admin.app.controllers
 
                 return Ok();
             }
-            catch
+            catch (Exception ex)
             {
-                return BadRequest();
+                return BadRequest(ex.Message);
             }
         }
 
         private async Task<bool> confirmBooking(bool isLive, Session session)
         {
             var metadata = session.Metadata;
+            _ = metadata ?? throw new ArgumentNullException(nameof(metadata));
+            _ = metadata["Event"] ?? throw new ArgumentNullException("Event");
+            _ = metadata["Date"] ?? throw new ArgumentNullException("Date");
+            _ = metadata["Name"] ?? throw new ArgumentNullException("Name");
+            _ = metadata["People"] ?? throw new ArgumentNullException("People");
 
             var date = DateTime.MinValue;
             DateTime.TryParse(metadata["Date"], out date);
 
-            var entity = new TableEntity(getPartitionKeyFromMetadata(metadata), getRowKeyFromMetadata(metadata))
-            {
-                {"PaymentId", session.PaymentIntentId },
-                {"Name", metadata["Name"] },
-                {"BookingType", "Paid" },
-                {"TelNo", metadata["TelNo"] },
-                {"Type", (isLive ? "Live" : "Test") },
-                {"Amount", Convert.ToDecimal(session.AmountTotal) / 100 },
-                {"People", Convert.ToInt32(metadata["People"]) },
-                {"Date", date.ToUniversalTime() }
-            };
+            var entity = createTableEntity(getPartitionKeyFromMetadata(metadata), getRowKeyFromMetadata(metadata), session.PaymentIntentId, metadata["Name"], "Paid", metadata["TelNo"], isLive, Convert.ToDecimal(session.AmountTotal) / 100, Convert.ToInt32(metadata["People"]), date.ToUniversalTime());
 
             return await addToStorage(entity);
         }
@@ -195,12 +184,27 @@ namespace admin.app.controllers
 
         private string getPartitionKey(string Event, string Date)
         {
-            return $"{Event}_{Date}".Replace("/", String.Empty);
+            return $"{Event}_{Date}".Replace("/", String.Empty).Replace(" ", string.Empty).Trim();
         }
 
         private string getRowKeyFromMetadata(Dictionary<string, string> metadata)
         {
-            return metadata["Email"];
+            return metadata["Email"].Trim();
+        }
+
+        private TableEntity createTableEntity(string partitionKey, string rowKey, string paymentId, string name, string bookingType, string telNo, bool isLive, decimal? amount, int? people, DateTime date)
+        {
+            return new TableEntity(partitionKey, rowKey)
+            {
+                {"PaymentId", paymentId },
+                {"Name", name },
+                {"BookingType", bookingType },
+                {"TelNo", telNo },
+                {"Type", (isLive ? "Live" : "Test") },
+                {"Amount", amount },
+                {"People", people },
+                {"Date", date.ToUniversalTime() }
+            };
         }
     }
 }
