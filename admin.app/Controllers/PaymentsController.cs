@@ -65,7 +65,7 @@ namespace admin.app.controllers
         {
             try
             {
-                var json = new StreamReader(this.Response.Body).ReadToEnd();
+                var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
                 Request.Headers.TryGetValue("Stripe-Signature", out var signature);
                 
                 var stripeEvent = EventUtility.ConstructEvent(
