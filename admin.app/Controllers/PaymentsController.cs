@@ -48,7 +48,7 @@ namespace admin.app.controllers
         {
             DateTime.TryParse(info.Date, out var date);
 
-            var entity = createTableEntity(info.Event, info.Date, null, info.Name, "Request", info.TelNo, info.isLiveBooking, null, info.Items.Sum(item => item.Quantity), date);
+            var entity = createTableEntity(getPartitionKey(info.Event, info.Date), info.Email, null, info.Name, "Request", info.TelNo, info.isLiveBooking, null, info.Items.Sum(item => item.Quantity), date);
 
             if (await addToStorage(entity))
                 return Ok();
@@ -60,13 +60,19 @@ namespace admin.app.controllers
             try
             {
                 var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+
+#if DEBUG
+                var stripeEvent = EventUtility.ParseEvent(
+                  json
+                );
+#else
                 Request.Headers.TryGetValue("Stripe-Signature", out var signature);
-                
                 var stripeEvent = EventUtility.ConstructEvent(
                   json,
                   signature,
                   secret
                 );
+#endif
 
                 // Handle the checkout.session.completed event
                 switch (stripeEvent.Type)
@@ -147,7 +153,7 @@ namespace admin.app.controllers
 
                 foreach (var entity in queryResultsFilter)
                 {
-                    client.DeleteEntity(entity.PartitionKey, entity.RowKey);
+                    await client.DeleteEntityAsync(entity.PartitionKey, entity.RowKey);
                 }
             }
             catch
