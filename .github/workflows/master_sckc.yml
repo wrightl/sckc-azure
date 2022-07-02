@@ -49,7 +49,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: net-func
-          path: ${{env.DOTNET_ROOT}}/function
+          path: ${{env.DOTNET_ROOT}}/func
 
   deploy-webapp:
     runs-on: windows-latest
