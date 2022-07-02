@@ -95,7 +95,7 @@ jobs:
           package: .
 
   cleanup:
-      needs: [deploy]
+      needs: [ deploy-webapp, deploy-function ]
       if: always()
       runs-on: ubuntu-latest
       steps:
