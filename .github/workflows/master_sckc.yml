@@ -74,14 +74,10 @@ jobs:
           package: .
 
   deploy-function:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-
       - name: Download artifact for function
         uses: actions/download-artifact@v2
         with:
