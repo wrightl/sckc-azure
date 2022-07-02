@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace admin.app.Models
+namespace admin.core.Models
 {
     public class ClubEvent
     {

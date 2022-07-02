@@ -25,7 +25,7 @@
                         </td>
                         <td> 
                             <a asp-page="/Bookings" 
-                               asp-route-id="@item.Summary.Replace(" ", string.Empty)_@item.StartDateTime.ToString("ddMMyy")"
+                               asp-route-id="@Model.getEventPartitionKey(item)"
                                asp-route-eventdate="@item.StartDateTime.ToString("dd/MM/yyyy")">@item.StartDateTime.ToString("dd/MM/yyyy")</a>
                         </td>
                     </tr>

@@ -1,4 +1,4 @@
-﻿using admin.app.Models;
+﻿using admin.core.Models;
 using Azure;
 using Azure.Data.Tables;
 using Microsoft.AspNetCore.Mvc;

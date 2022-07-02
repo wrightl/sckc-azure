@@ -1,11 +1,12 @@
-﻿using admin.app.Models;
+﻿using admin.app.Settings;
+using admin.core;
+using admin.core.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
-using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace admin.app.Pages
@@ -13,9 +14,11 @@ namespace admin.app.Pages
     public class IndexModel : PageModel
     {
         private readonly ILogger<IndexModel> _logger;
+        private readonly Secrets _secrets;
 
-        public IndexModel(ILogger<IndexModel> logger)
+        public IndexModel(ILogger<IndexModel> logger, IOptions<Secrets> options)
         {
+            _secrets = options?.Value ?? throw new ArgumentNullException(nameof(options));
             _logger = logger;
         }
 
@@ -23,29 +26,13 @@ namespace admin.app.Pages
 
         public async Task<IActionResult> OnGetAsync()
         {
-            this.Events = await this.getClubEvents();
+            this.Events = await Helper.GetClubEvents(this._secrets.base_api_url, 20);
             return Page();
         }
 
-        private async Task<IEnumerable<ClubEvent>> getClubEvents()
+        public string getEventPartitionKey(ClubEvent ev)
         {
-            string endpoint = "http://www.sheffieldcitykayakclub.co.uk/app/api/GetEvents?count=20";
-
-            using (HttpClient client = new HttpClient())
-            {
-                using (var Response = await client.GetAsync(endpoint))
-                {
-                    if (Response.StatusCode == System.Net.HttpStatusCode.OK)
-                    {
-                        return JsonConvert.DeserializeObject<IEnumerable<ClubEvent>>(await Response.Content.ReadAsStringAsync());
-                    }
-                    else
-                    {
-                        throw new Exception("Failed to load Events");
-                    }
-                }
-
-            }
+            return Helper.GetEventPartitionKey(ev);
         }
     }
 }

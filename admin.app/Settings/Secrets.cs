@@ -9,5 +9,6 @@
         public string azure_storage_connstring { get; set; }
 
         public string sendgrid_apikey { get; set; }
+        public string base_api_url { get; set; }
     }
 }

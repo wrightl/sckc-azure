@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace admin.app.Models
+namespace admin.core.Models
 {
     public class BookingDto
     {

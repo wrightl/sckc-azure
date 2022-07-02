@@ -1,4 +1,4 @@
-﻿namespace admin.app.Models
+﻿namespace admin.core.Models
 {
     public class BookingItemDto
     {
