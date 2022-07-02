@@ -46,9 +46,20 @@ namespace admin.app.controllers
         [HttpPost("booking")]
         public async Task<IActionResult> Booking(BookingDto info)
         {
+            return await logBookingOrEnquiry(info, "Booking");
+        }
+
+        [HttpPost("enquiry")]
+        public async Task<IActionResult> Enquiry(BookingDto info)
+        {
+            return await logBookingOrEnquiry(info, "Enquiry");
+        }
+
+        private async Task<IActionResult> logBookingOrEnquiry(BookingDto info, string type)
+        {
             DateTime.TryParse(info.Date, out var date);
 
-            var entity = createTableEntity(getPartitionKey(info.Event, info.Date), info.Email, null, info.Name, "Request", info.TelNo, info.isLiveBooking, null, info.Items.Sum(item => item.Quantity), date);
+            var entity = createTableEntity(getPartitionKey(info.Event, info.Date), info.Email, null, info.Name, type, info.TelNo, info.isLiveBooking, null, info.Items.Sum(item => item.Quantity), date);
 
             if (await addToStorage(entity))
                 return Ok();
