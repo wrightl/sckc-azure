@@ -22,25 +22,34 @@ jobs:
           dotnet-version: '6.0.x'
           include-prerelease: true
 
-      - name: Build with dotnet
-        run: dotnet build --configuration Release
+      - name: Build solution
+        run: dotnet build --configuration Release 
 
-      - name: dotnet publish
-        run: dotnet publish -c Release -o ${{env.DOTNET_ROOT}}/myapp
+      - name: dotnet publish webapp
+        run: dotnet publish ./admin.app/ -c Release -o ${{env.DOTNET_ROOT}}/app
+
+      - name: dotnet publish function
+        run: dotnet publish ./admin.function/ -c Release -o ${{env.DOTNET_ROOT}}/func
 
       - name: Insert secrets into appsettings
         run: |
-            cd ${{env.DOTNET_ROOT}}/myapp
+            cd ${{env.DOTNET_ROOT}}/app
             ((Get-Content -path appsettings.json -Raw) -replace '{azure_storage_connstring}','${{ secrets.AZURE_STORAGE_CONNSTRING }}') | Set-Content -Path appsettings.json
             ((Get-Content -path appsettings.json -Raw) -replace '{stripe_webhook_test_secret}','${{ secrets.STRIPE_WEBHOOK_TEST_SECRET }}') | Set-Content -Path appsettings.json
             ((Get-Content -path appsettings.json -Raw) -replace '{stripe_webhook_live_secret}','${{ secrets.STRIPE_WEBHOOK_LIVE_SECRET }}') | Set-Content -Path appsettings.json
             ((Get-Content -path appsettings.json -Raw) -replace '{sendgrid_apikey}','${{ secrets.SENDGRID_APIKEY }}') | Set-Content -Path appsettings.json
 
-      - name: Upload artifact for deployment job
+      - name: Upload artifact for webapp
         uses: actions/upload-artifact@v2
         with:
-          name: .net-app
-          path: ${{env.DOTNET_ROOT}}/myapp
+          name: net-app
+          path: ${{env.DOTNET_ROOT}}/app
+
+      - name: Upload artifact for function
+        uses: actions/upload-artifact@v2
+        with:
+          name: net-func
+          path: ${{env.DOTNET_ROOT}}/function
 
   deploy:
     runs-on: windows-latest
@@ -50,31 +59,42 @@ jobs:
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
 
     steps:
-      - name: Download artifact from build job
+      - name: Download artifact for webapp
         uses: actions/download-artifact@v2
         with:
-          name: .net-app
+          name: net-app
 
-      - name: Deploy to Azure Web App
+      - name: Deploy webapp to Azure
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'sckc'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FFD49708A3E041FCB10C729122AA5AA6 }}
-          package: .
+          package: ./net-app
+
+      - name: Download artifact for function
+        uses: actions/download-artifact@v2
+        with:
+          name: net-func
+
+      - name: Deploy function to Azure
+        uses: azure/functions-action@v1.4.6
+        with:
+          app-name: 'sckc-func'
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+          package: ./net-func
 
   cleanup:
       needs: [deploy]
       if: always()
-      # The type of runner that the job will run on
       runs-on: ubuntu-latest
       steps:
 
           - name: Delete Artifacts
             uses: GeekyEggo/delete-artifact@v1.0.0
             with:
-                # The name of the artifact to delete; multiple names can be supplied on new lines.
-                name: .net-app
-                # Indicates whether the action should fail upon encountering an error.
-                failOnError: false # optional, default is true
+                name: |
+                    net-app
+                    net-function
+                failOnError: false
