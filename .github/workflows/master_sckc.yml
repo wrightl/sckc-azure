@@ -51,7 +51,7 @@ jobs:
           name: net-func
           path: ${{env.DOTNET_ROOT}}/function
 
-  deploy:
+  deploy-webapp:
     runs-on: windows-latest
     needs: build
     environment:
@@ -71,7 +71,16 @@ jobs:
           app-name: 'sckc'
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_FFD49708A3E041FCB10C729122AA5AA6 }}
-          package: ./net-app
+          package: .
+
+  deploy-function:
+    runs-on: windows-latest
+    needs: build
+    environment:
+      name: 'Production'
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+
+    steps:
 
       - name: Download artifact for function
         uses: actions/download-artifact@v2
@@ -83,7 +92,7 @@ jobs:
         with:
           app-name: 'sckc-func'
           publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
-          package: ./net-func
+          package: .
 
   cleanup:
       needs: [deploy]
