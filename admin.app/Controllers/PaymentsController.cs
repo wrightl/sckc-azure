@@ -59,7 +59,7 @@ namespace admin.app.controllers
         {
             DateTime.TryParse(info.Date, out var date);
 
-            var entity = createTableEntity(getPartitionKey(info.Event, info.Date), info.Email, null, info.Name, type, info.TelNo, info.isLiveBooking, null, info.Items.Sum(item => item.Quantity), date);
+            var entity = createTableEntity(getPartitionKey(info.Event, info.Date), info.Email, null, info.Name, type, info.TelNo, info.isLiveBooking, null, info.Items?.Sum(item => item.Quantity), date);
 
             if (await addToStorage(entity))
                 return Ok();
@@ -219,7 +219,7 @@ namespace admin.app.controllers
                 {"TelNo", telNo },
                 {"Type", (isLive ? "Live" : "Test") },
                 {"Amount", amount },
-                {"People", people },
+                {"People", (people.HasValue ? people : string.Empty) },
                 {"Date", date.ToUniversalTime() }
             };
         }
