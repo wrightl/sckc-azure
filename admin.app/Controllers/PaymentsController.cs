@@ -127,14 +127,7 @@ namespace admin.app.controllers
         {
             var tableClient = await getTableClient("Bookings");
 
-            try
-            {
-                await tableClient.UpsertEntityAsync(entity);
-            }
-            catch (Exception)
-            {
-
-            }
+            await tableClient.UpsertEntityAsync(entity);
 
             purgeOldEntries(tableClient);
 
