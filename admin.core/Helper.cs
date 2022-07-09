@@ -45,13 +45,17 @@ namespace admin.core
             List<Booking> bookings = new List<Booking>();
             foreach (var booking in queryResultsFilter)
             {
+                int? people = null;
+                if (!string.IsNullOrWhiteSpace(booking.GetString("People")))
+                    people = int.Parse(booking.GetString("People"));
+
                 bookings.Add(new Booking()
                 {
                     Name = booking.GetString("Name"),
                     Email = booking.RowKey,
                     BookingType = booking.GetString("BookingType"),
                     IsLiveBooking = "Live".Equals(booking.GetString("Type"), StringComparison.InvariantCultureIgnoreCase),
-                    People = booking.GetInt32("People"),
+                    People = people,
                     Amount = booking["Amount"] != null ? (double?)Convert.ToDouble(booking["Amount"].ToString()) : null,
                 });
             }

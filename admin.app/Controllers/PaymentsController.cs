@@ -210,7 +210,7 @@ namespace admin.app.controllers
                 {"TelNo", telNo },
                 {"Type", (isLive ? "Live" : "Test") },
                 {"Amount", amount },
-                {"People", (people.HasValue ? people : string.Empty) },
+                {"People", (people.HasValue ? people.ToString() : string.Empty) },
                 {"Date", date.ToUniversalTime() }
             };
         }
