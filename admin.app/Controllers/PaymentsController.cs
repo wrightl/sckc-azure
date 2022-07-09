@@ -57,7 +57,7 @@ namespace admin.app.controllers
 
         private async Task<IActionResult> logBookingOrEnquiry(BookingDto info, string type)
         {
-            DateTime.TryParse(info.Date, out var date);
+            DateTime date = ParseDate(info.Date);
 
             var entity = createTableEntity(getPartitionKey(info.Event, info.Date), info.Email, null, info.Name, type, info.TelNo, info.isLiveBooking, null, info.Items?.Sum(item => item.Quantity), date);
 
@@ -115,8 +115,7 @@ namespace admin.app.controllers
             _ = metadata["Name"] ?? throw new ArgumentNullException("Name");
             _ = metadata["People"] ?? throw new ArgumentNullException("People");
 
-            var date = DateTime.MinValue;
-            DateTime.TryParse(metadata["Date"], out date);
+            var date = ParseDate(metadata["Date"]);
 
             var entity = createTableEntity(getPartitionKeyFromMetadata(metadata), getRowKeyFromMetadata(metadata), session.PaymentIntentId, metadata["Name"], "Paid", metadata["TelNo"], isLive, Convert.ToDecimal(session.AmountTotal) / 100, Convert.ToInt32(metadata["People"]), date.ToUniversalTime());
 
@@ -171,9 +170,8 @@ namespace admin.app.controllers
             entity.TryGetValue("Date", out dateString);
             if (dateString != null)
             {
-                DateTime dt;
-                if (DateTime.TryParse(dateString.ToString(), out dt))
-                    return dt.AddYears(1) > DateTime.Now;
+                DateTime dt = ParseDate(dateString.ToString());
+                return dt.AddYears(1) > DateTime.Now;
             }
             return false;
         }
@@ -215,6 +213,12 @@ namespace admin.app.controllers
                 {"People", (people.HasValue ? people : string.Empty) },
                 {"Date", date.ToUniversalTime() }
             };
+        }
+
+        private static DateTime ParseDate(string date)
+        {
+            System.Globalization.CultureInfo cultureinfo = new System.Globalization.CultureInfo("en-GB");
+            return DateTime.Parse(date, cultureinfo);
         }
     }
 }
