@@ -1,17 +1,19 @@
-﻿using admin.core.Models;
+﻿using admin.app.Settings;
+using admin.core;
+using admin.core.Models;
 using Azure;
 using Azure.Data.Tables;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Stripe;
 using Stripe.Checkout;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using io = System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using System.IO;
-using admin.app.Settings;
-using Microsoft.Extensions.Options;
 
 namespace admin.app.controllers
 {
@@ -70,7 +72,7 @@ namespace admin.app.controllers
         {
             try
             {
-                var json = await new StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+                var json = await new io.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
 
 #if DEBUG
                 var stripeEvent = EventUtility.ParseEvent(
@@ -110,6 +112,7 @@ namespace admin.app.controllers
         {
             var metadata = session.Metadata;
             _ = metadata ?? throw new ArgumentNullException(nameof(metadata));
+            _ = metadata["Email"] ?? throw new ArgumentNullException("Email");
             _ = metadata["Event"] ?? throw new ArgumentNullException("Event");
             _ = metadata["Date"] ?? throw new ArgumentNullException("Date");
             _ = metadata["Name"] ?? throw new ArgumentNullException("Name");
@@ -119,7 +122,37 @@ namespace admin.app.controllers
 
             var entity = createTableEntity(getPartitionKeyFromMetadata(metadata), getRowKeyFromMetadata(metadata), session.PaymentIntentId, metadata["Name"], "Paid", metadata["TelNo"], isLive, Convert.ToDecimal(session.AmountTotal) / 100, Convert.ToInt32(metadata["People"]), date.ToUniversalTime());
 
-            return await addToStorage(entity);
+            var result = await addToStorage(entity);
+
+            // Send email to sckc booking requests email
+            await Helper.SendMessage(
+                _secrets.sendgrid_apikey,
+                $"Booking request for {metadata["Event"]} on {metadata["Date"]}",
+                Constants.BookingRequestEmailAddress,
+                Constants.BookingRequestEmailAddress,
+                $"From: {metadata["Name"]}<br/>Email: <a href=\"mailto:{metadata["Email"]}\">{metadata["Email"]}</a><br/>Number of people: {metadata["People"]}<br/>TelNo: {metadata["TelNo"]}",
+                Constants.BookingRequestEmailName,
+                Constants.BookingRequestEmailName
+            );
+
+            // Reply to the person booking
+            string filePath = io.Path.Combine(_webhost.WebRootPath, "Templates", $"{metadata["Event"].Split(" ")[0]}_booking_response.html");
+
+            if (io.File.Exists(filePath))
+            {
+                var autoReplyContent = Helper.ReplaceTemplatePlaceholders(io.File.ReadAllText(filePath), metadata);
+
+                await Helper.SendMessage(
+                    _secrets.sendgrid_apikey,
+                    $"Booking request for {metadata["Event"]} on {metadata["Date"]}",
+                    metadata["Email"],
+                    Constants.BookingRequestEmailAddress,
+                    autoReplyContent,
+                    FromName: Constants.BookingRequestEmailName
+                );
+            }
+
+            return result;
         }
 
         private async Task<bool> addToStorage(TableEntity entity)
@@ -217,7 +250,7 @@ namespace admin.app.controllers
 
         private static DateTime ParseDate(string date)
         {
-            System.Globalization.CultureInfo cultureinfo = new System.Globalization.CultureInfo("en-GB");
+            CultureInfo cultureinfo = new CultureInfo("en-GB");
             return DateTime.Parse(date, cultureinfo);
         }
     }

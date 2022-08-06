@@ -68,12 +68,12 @@ namespace admin.core
             return $"{ev.Summary.Replace(" ", string.Empty)}_{ev.StartDateTime.ToString("ddMMyy")}";
         }
 
-        public static async Task<bool> SendMessage(string ApiKey, string Subject, string To, string From, string Message)
+        public static async Task<bool> SendMessage(string ApiKey, string Subject, string To, string From, string Message, string ToName = null, string FromName = null, string ReployTo = null)
         {
-            var from = new EmailAddress(From, "SCKC");
-            var to = new EmailAddress(To, "SCKC");
+            var from = new EmailAddress(From, FromName ?? "SCKC");
+            var to = new EmailAddress(To, ToName ?? "SCKC");
             var msg = MailHelper.CreateSingleEmail(from, to, Subject, Message, Message);
-            msg.ReplyTo = new EmailAddress("admin@sheffieldcitykayakclub.co.uk");
+            msg.ReplyTo = new EmailAddress(ReployTo ?? Constants.AdminEmailAddress);
 
             var client = new SendGridClient(ApiKey);
             var response = await client.SendEmailAsync(msg);
@@ -82,6 +82,18 @@ namespace admin.core
                 return true;
 
             throw new Exception(await response.Body.ReadAsStringAsync());
+        }
+
+        public static string ReplaceTemplatePlaceholders(string template, Dictionary<string, string> info)
+        {
+            var s = template;
+
+            foreach (var kvp in info)
+            {
+                s = s.Replace($"{{{{{kvp.Key}}}}}", kvp.Value);
+            }
+
+            return s;
         }
     }
 }

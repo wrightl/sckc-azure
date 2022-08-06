@@ -34,8 +34,8 @@ namespace admin.function
 
                     await Helper.SendMessage(send_apikey,
                         $"Bookings for {ev.Summary} on {ev.StartDateTime.ToString("dd/MM/yyyy")}",
-                        "coaches@sheffieldcitykayakclub.co.uk",
-                        "coaches@sheffieldcitykayakclub.co.uk",
+                        Constants.CoachesEmailAddress,
+                        Constants.CoachesEmailAddress,
                         convertToList(bookings));
                 }
             }
