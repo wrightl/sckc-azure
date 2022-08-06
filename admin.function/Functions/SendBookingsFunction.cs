@@ -20,24 +20,20 @@ namespace admin.function
             var apiBaseUrl = Environment.GetEnvironmentVariable("base_url");
             var send_apikey = Environment.GetEnvironmentVariable("sendgrid_apikey");
 
-            var events = await Helper.GetClubEvents(apiBaseUrl, 2);
+            var _event = (await Helper.GetClubEvents(apiBaseUrl, 2)).FirstOrDefault();
 
             DateTime now = DateTime.UtcNow;
 
-            foreach (var ev in events)
+            if (_event != null && now.Hour == 17 && now.AddHours(24) > _event.StartDateTime)
             {
-                var diff = ev.StartDateTime.Subtract(now);
-                if (diff.TotalHours > 0 && diff.TotalHours < 24)
-                {
-                    // Get bookings for this event
-                    var bookings = await Helper.GetBookings(azure_storage_connstring, Helper.GetEventPartitionKey(ev));
+                // Get bookings for this event
+                var bookings = await Helper.GetBookings(azure_storage_connstring, Helper.GetEventPartitionKey(_event));
 
-                    await Helper.SendMessage(send_apikey,
-                        $"Bookings for {ev.Summary} on {ev.StartDateTime.ToString("dd/MM/yyyy")}",
-                        Constants.CoachesEmailAddress,
-                        Constants.CoachesEmailAddress,
-                        convertToList(bookings));
-                }
+                await Helper.SendMessage(send_apikey,
+                    $"Bookings for {_event.Summary} on {_event.StartDateTime.ToString("dd/MM/yyyy")}",
+                    Constants.CoachesEmailAddress,
+                    Constants.CoachesEmailAddress,
+                    convertToList(bookings));
             }
         }
 
