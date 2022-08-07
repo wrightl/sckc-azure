@@ -1,3 +1,4 @@
+using admin.app.Services;
 using admin.app.Settings;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -29,6 +30,9 @@ namespace admin.app
             });
 
             services.Configure<Secrets>(Configuration.GetSection("Secrets"));
+            services.AddScoped<BookingsService>();
+            services.AddScoped<StorageService>();
+            services.AddScoped<PaymentsService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
