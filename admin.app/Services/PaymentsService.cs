@@ -28,31 +28,29 @@ namespace admin.app.Services
             _storage = storage ?? throw new ArgumentNullException(nameof(storage));
         }
 
-        public async Task<bool> ProcessLiveWebhook(io.Stream body)
+        public async Task<bool> ProcessLiveWebhook(string jsonObject, string stripeSignature = null)
         {
             var secret = this._secrets.stripe_webhook_live_secret.Trim();
-            return await this.processWebhook(body, true, secret);
+            return await this.processWebhook(jsonObject, true, secret, stripeSignature);
         }
 
-        public async Task<bool> ProcessTestWebhook(io.Stream body)
+        public async Task<bool> ProcessTestWebhook(string jsonObject, string stripeSignature = null)
         {
             var secret = this._secrets.stripe_webhook_test_secret.Trim();
-            return await this.processWebhook(body, false, secret);
+            return await this.processWebhook(jsonObject, false, secret, stripeSignature);
         }
 
-        private async Task<bool> processWebhook(io.Stream body, bool isLive, string secret)
+        private async Task<bool> processWebhook(string jsonObject, bool isLive, string secret, string stripeSignature = null)
         {
-            var json = await new io.StreamReader(body).ReadToEndAsync();
 
 #if DEBUG
             var stripeEvent = EventUtility.ParseEvent(
-                json
+                jsonObject
             );
 #else
-            Request.Headers.TryGetValue("Stripe-Signature", out var signature);
             var stripeEvent = EventUtility.ConstructEvent(
-                json,
-                signature,
+                jsonObject,
+                stripeSignature,
                 secret
             );
 #endif

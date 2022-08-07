@@ -20,21 +20,30 @@ namespace admin.app.controllers
         [HttpPost("book")]
         public async Task<IActionResult> Book(BookingDto info)
         {
-            var result = await _bookingsService.LogBooking(info);
+            try
+            {
+                var result = await _bookingsService.LogBooking(info);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return Ok();
 
-            if (result)
-                return Ok();
-            return BadRequest();
         }
 
         [HttpPost("enquiry")]
         public async Task<IActionResult> Enquiry(BookingDto info)
         {
-            var result = await _bookingsService.LogEnquiry(info);
-
-            if (result)
-                return Ok();
-            return BadRequest();
+            try
+            {
+                var result = await _bookingsService.LogEnquiry(info);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            return Ok();
         }
     }
 }

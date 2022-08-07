@@ -1,5 +1,7 @@
 ﻿using admin.app.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
+using Stripe;
 using System;
 using System.Threading.Tasks;
 
@@ -19,9 +21,33 @@ namespace admin.app.controllers
         [HttpPost("livewebhook")]
         public async Task<IActionResult> LiveWebhook()
         {
+            return await webhook(true);
+        }
+
+        [HttpPost("testwebhook")]
+        public async Task<IActionResult> TestWebhook()
+        {
+            return await webhook(false);
+
+        }
+
+        private async Task<IActionResult> webhook(bool isLive)
+        {
             try
             {
-                await _payments.ProcessLiveWebhook(HttpContext.Request.Body);
+                var json = await new System.IO.StreamReader(HttpContext.Request.Body).ReadToEndAsync();
+
+                string signature = null;
+#if !DEBUG
+                Request.Headers.TryGetValue("Stripe-Signature", out var headerSignature);
+                signature = headerSignature.ToString();
+#endif
+
+                if (isLive)
+                    await _payments.ProcessLiveWebhook(json, signature);
+                else
+                    await _payments.ProcessLiveWebhook(json, signature);
+
                 return Ok();
             }
             catch (Exception ex)
@@ -30,18 +56,6 @@ namespace admin.app.controllers
             }
         }
 
-        [HttpPost("testwebhook")]
-        public async Task<IActionResult> TestWebhook()
-        {
-            try
-            {
-                await _payments.ProcessTestWebhook(HttpContext.Request.Body);
-                return Ok();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+        
     }
 }
