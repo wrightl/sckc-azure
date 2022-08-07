@@ -22,7 +22,7 @@ namespace admin.core.Models
 
         public bool payNow { get; set; }
 
-        public bool isLiveBooking { get; set; }
+        public bool isLive { get; set; }
 
         public List<BookingItemDto> Items { get; set; }
     }

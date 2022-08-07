@@ -61,7 +61,7 @@ namespace admin.app.controllers
         {
             DateTime date = ParseDate(info.Date);
 
-            var entity = createTableEntity(getPartitionKey(info.Event, info.Date), info.Email, null, info.Name, type, info.TelNo, info.isLiveBooking, null, info.Items?.Sum(item => item.Quantity), date);
+            var entity = createTableEntity(getPartitionKey(info.Event, info.Date), info.Email, null, info.Name, type, info.TelNo, info.isLive, null, info.Items?.Sum(item => item.Quantity), date);
 
             if (await addToStorage(entity))
                 return Ok();
